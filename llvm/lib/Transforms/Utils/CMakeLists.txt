@@ -33,6 +33,7 @@ add_llvm_component_library(LLVMTransformUtils
   HelloWorld.cpp
   InlineFunction.cpp
   InjectTLIMappings.cpp
+  InstPrintPass.cpp
   InstructionNamer.cpp
   IntegerDivision.cpp
   LCSSA.cpp
