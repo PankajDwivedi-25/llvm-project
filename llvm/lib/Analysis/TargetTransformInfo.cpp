@@ -1476,6 +1476,11 @@ void TargetTransformInfo::collectKernelLaunchBounds(
   return TTIImpl->collectKernelLaunchBounds(F, LB);
 }
 
+bool TargetTransformInfo::isSpecialUniformIntrinsic(
+    const Instruction &I) const {
+  return TTIImpl->isSpecialUniformIntrinsic(I);
+}
+
 TargetTransformInfoImplBase::~TargetTransformInfoImplBase() = default;
 
 TargetIRAnalysis::TargetIRAnalysis() : TTICallback(&getDefaultTTI) {}

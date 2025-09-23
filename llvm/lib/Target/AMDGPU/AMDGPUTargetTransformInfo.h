@@ -290,6 +290,7 @@ public:
   void collectKernelLaunchBounds(
       const Function &F,
       SmallVectorImpl<std::pair<StringRef, int64_t>> &LB) const override;
+  bool isSpecialUniformIntrinsic(const Instruction &I) const override;
 };
 
 } // end namespace llvm

@@ -1422,3 +1422,15 @@ void GCNTTIImpl::collectKernelLaunchBounds(
   LB.push_back({"amdgpu-waves-per-eu[0]", WavesPerEU.first});
   LB.push_back({"amdgpu-waves-per-eu[1]", WavesPerEU.second});
 }
+
+bool GCNTTIImpl::isSpecialUniformIntrinsic(const Instruction &I) const {
+  if (const auto *II = dyn_cast<IntrinsicInst>(&I)) {
+    switch (II->getIntrinsicID()) {
+    case Intrinsic::amdgcn_permlane16:
+      return true;
+    default:
+      return false;
+    }
+  }
+  return false;
+}

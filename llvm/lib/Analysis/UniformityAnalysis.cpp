@@ -42,12 +42,26 @@ bool llvm::GenericUniformityAnalysisImpl<SSAContext>::isDivergentUse(
   return false;
 }
 
+template <>
+bool llvm::GenericUniformityAnalysisImpl<SSAContext>::isAnyOperandUniform(
+    const Instruction &I) const {
+  for (unsigned i = 0, e = I.getNumOperands(); i != e; ++i) {
+    if (!isa<Instruction>(I.getOperand(i)) && !isa<Argument>(I.getOperand(i)))
+      continue;
+    if (!isDivergentUse(I.getOperandUse(i)))
+      return true;
+  }
+  return false;
+}
+
 template <> void llvm::GenericUniformityAnalysisImpl<SSAContext>::initialize() {
   for (auto &I : instructions(F)) {
     if (TTI->isSourceOfDivergence(&I))
       markDivergent(I);
     else if (TTI->isAlwaysUniform(&I))
       addUniformOverride(I);
+    else if (TTI->isSpecialUniformIntrinsic(I))
+      addSpecialUniformIntrinsic(I);
   }
   for (auto &Arg : F.args()) {
     if (TTI->isSourceOfDivergence(&Arg)) {
@@ -61,6 +75,11 @@ void llvm::GenericUniformityAnalysisImpl<SSAContext>::pushUsers(
     const Value *V) {
   for (const auto *User : V->users()) {
     if (const auto *UserInstr = dyn_cast<const Instruction>(User)) {
+      if (SpecialUniformIntrinsics.count(UserInstr) &&
+          isAnyOperandUniform(*UserInstr)) {
+        addUniformOverride(*UserInstr);
+        continue;
+      }
       markDivergent(*UserInstr);
     }
   }

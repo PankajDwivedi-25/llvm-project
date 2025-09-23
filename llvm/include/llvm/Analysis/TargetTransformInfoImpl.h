@@ -1147,6 +1147,10 @@ public:
       const Function &F,
       SmallVectorImpl<std::pair<StringRef, int64_t>> &LB) const {}
 
+  virtual bool isSpecialUniformIntrinsic(const Instruction &I) const {
+    return false;
+  }
+
 protected:
   // Obtain the minimum required size to hold the value (without the sign)
   // In case of a vector it returns the min required size for one element.

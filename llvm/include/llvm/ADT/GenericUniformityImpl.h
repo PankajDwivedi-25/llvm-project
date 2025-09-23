@@ -51,6 +51,7 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SparseBitVector.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/Uniformity.h"
 #include "llvm/Support/raw_ostream.h"
 
 #define DEBUG_TYPE "uniformity"
@@ -407,6 +408,11 @@ public:
   void recordTemporalDivergence(ConstValueRefT, const InstructionT *,
                                 const CycleT *);
 
+  bool isAnyOperandUniform(const InstructionT &Instr) const;
+
+  /// \brief keep track of special target intrinsics that can be proven uniform.
+  void addSpecialUniformIntrinsic(const InstructionT &Instr);
+
 protected:
   /// \brief Value/block pair representing a single phi input.
   struct PhiInput {
@@ -429,6 +435,8 @@ protected:
   // Internal worklist for divergence propagation.
   std::vector<const InstructionT *> Worklist;
 
+  // Special intrinsics list which can be proven uniform.
+  llvm::SmallPtrSet<const InstructionT *, 8> SpecialUniformIntrinsics;
   /// \brief Mark \p Term as divergent and push all Instructions that become
   /// divergent as a result on the worklist.
   void analyzeControlDivergence(const InstructionT &Term);
@@ -822,6 +830,12 @@ template <typename ContextT>
 void GenericUniformityAnalysisImpl<ContextT>::addUniformOverride(
     const InstructionT &Instr) {
   UniformOverrides.insert(&Instr);
+}
+
+template <typename ContextT>
+void GenericUniformityAnalysisImpl<ContextT>::addSpecialUniformIntrinsic(
+    const InstructionT &Instr) {
+  SpecialUniformIntrinsics.insert(&Instr);
 }
 
 // Mark as divergent all external uses of values defined in \p DefCycle.
