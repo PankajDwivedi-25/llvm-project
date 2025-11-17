@@ -2083,7 +2083,8 @@ public:
   /// Returns true if GEP should not be used to index into vectors for this
   /// target.
   LLVM_ABI bool allowVectorElementIndexingUsingGEP() const;
-  InstructionUniformity getInstructionUniformity(const Instruction &I) const;
+
+  InstructionUniformity getInstructionUniformity(const Value *V) const;
 
 private:
   std::unique_ptr<const TargetTransformInfoImplBase> TTIImpl;
