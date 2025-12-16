@@ -221,6 +221,7 @@ public:
     // Self-referential globals are not supported.
     return false;
   }
+
   InstructionUniformity getInstructionUniformity(const Value *V) const override;
 };
 
