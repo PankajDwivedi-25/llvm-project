@@ -1817,6 +1817,5 @@ bool GCNTTIImpl::isUniform(const Instruction *I,
       break;
     }
   }
-
   return false;
 }
