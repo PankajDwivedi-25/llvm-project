@@ -1551,9 +1551,9 @@ bool TargetTransformInfo::allowVectorElementIndexingUsingGEP() const {
   return TTIImpl->allowVectorElementIndexingUsingGEP();
 }
 
-bool TargetTransformInfo::isUniform(const Instruction *I,
-                                    const SmallBitVector &UniformArgs) const {
-  return TTIImpl->isUniform(I, UniformArgs);
+bool TargetTransformInfo::isDivergent(
+    const Instruction *I, const SmallBitVector &DivergentArgs) const {
+  return TTIImpl->isDivergent(I, DivergentArgs);
 }
 
 TargetTransformInfoImplBase::~TargetTransformInfoImplBase() = default;
