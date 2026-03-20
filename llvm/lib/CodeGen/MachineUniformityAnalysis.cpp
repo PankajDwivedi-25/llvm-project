@@ -8,7 +8,6 @@
 
 #include "llvm/CodeGen/MachineUniformityAnalysis.h"
 #include "llvm/ADT/GenericUniformityImpl.h"
-#include "llvm/ADT/SmallBitVector.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/CodeGen/MachineCycleAnalysis.h"
 #include "llvm/CodeGen/MachineDominators.h"
@@ -63,8 +62,6 @@ void llvm::GenericUniformityAnalysisImpl<MachineSSAContext>::initialize() {
         markDivergent(instr);
         break;
       case InstructionUniformity::Custom:
-        // Instructions requiring custom divergence analysis based on operands
-        addCustomDivergenceCandidate(&instr);
         break;
       case InstructionUniformity::Default:
         break;
@@ -157,22 +154,9 @@ bool llvm::GenericUniformityAnalysisImpl<MachineSSAContext>::isDivergentUse(
 }
 
 template <>
-bool GenericUniformityAnalysisImpl<MachineSSAContext>::isCustomDivergent(
+bool GenericUniformityAnalysisImpl<MachineSSAContext>::isCustomUniform(
     const MachineInstr &MI) const {
-  const auto &InstrInfo = *F.getSubtarget().getInstrInfo();
-
-  // Build bitvector of divergent operands
-  SmallBitVector DivergentArgs(MI.getNumOperands());
-  for (unsigned OpIdx = 0, E = MI.getNumOperands(); OpIdx != E; ++OpIdx) {
-    const MachineOperand &MO = MI.getOperand(OpIdx);
-    // Register operands: check if divergent
-    // Non-register operands (immediates, etc.): always uniform (never
-    // divergent)
-    DivergentArgs[OpIdx] = MO.isReg() && isDivergentUse(MO);
-  }
-
-  // Query target-specific divergence callback
-  return InstrInfo.isDivergent(MI, DivergentArgs);
+  llvm_unreachable("no MIR instructions use Custom uniformity yet");
 }
 
 // This ensures explicit instantiation of

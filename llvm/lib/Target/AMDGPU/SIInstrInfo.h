@@ -1680,9 +1680,6 @@ public:
   InstructionUniformity
   getInstructionUniformity(const MachineInstr &MI) const final;
 
-  bool isDivergent(const MachineInstr &MI,
-                   const SmallBitVector &DivergentArgs) const final;
-
   InstructionUniformity
   getGenericInstructionUniformity(const MachineInstr &MI) const;
 

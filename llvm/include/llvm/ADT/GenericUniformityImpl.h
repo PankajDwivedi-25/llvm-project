@@ -408,12 +408,12 @@ public:
   void recordTemporalDivergence(ConstValueRefT, const InstructionT *,
                                 const CycleT *);
 
-  /// Check if an instruction with Custom uniformity can be proven divergent
+  /// Check if an instruction with Custom uniformity can be proven uniform
   /// based on its operands. This queries the target-specific callback.
-  bool isCustomDivergent(const InstructionT &I) const;
+  bool isCustomUniform(const InstructionT &I) const;
 
-  /// \brief Add an instruction that requires custom divergence analysis.
-  void addCustomDivergenceCandidate(const InstructionT *I);
+  /// \brief Add an instruction that requires custom uniformity analysis.
+  void addCustomUniformityCandidate(const InstructionT *I);
 
 protected:
   const ContextT &Context;
@@ -428,9 +428,9 @@ protected:
   // Internal worklist for divergence propagation.
   std::vector<const InstructionT *> Worklist;
 
-  // Set of instructions that require custom divergence analysis based on
-  // operand divergence.
-  SmallPtrSet<const InstructionT *, 8> CustomDivergenceCandidates;
+  // Set of instructions that require custom uniformity analysis based on
+  // operand uniformity.
+  SmallPtrSet<const InstructionT *, 8> CustomUniformityCandidates;
 
   /// \brief Mark \p Term as divergent and push all Instructions that become
   /// divergent as a result on the worklist.
@@ -795,13 +795,12 @@ void GenericUniformityAnalysisImpl<ContextT>::markDivergent(
     const InstructionT &I) {
   if (isAlwaysUniform(I))
     return;
-  // For custom divergence candidates, try to prove divergence.
-  // If we can't prove it's divergent yet, skip marking it.
+  // For custom uniformity candidates, check if the instruction can be
+  // proven uniform based on which operands are uniform/divergent.
   // The candidate will be re-evaluated as operands become divergent.
-  if (CustomDivergenceCandidates.count(&I)) {
-    if (!isCustomDivergent(I))
-      return; // Can't prove divergent yet, assume uniform
-    // Otherwise, we can prove it's divergent, continue to mark it
+  if (CustomUniformityCandidates.count(&I)) {
+    if (isCustomUniform(I))
+      return;
   }
   bool Marked = false;
   if (I.isTerminator()) {
@@ -835,9 +834,9 @@ void GenericUniformityAnalysisImpl<ContextT>::addUniformOverride(
 }
 
 template <typename ContextT>
-void GenericUniformityAnalysisImpl<ContextT>::addCustomDivergenceCandidate(
+void GenericUniformityAnalysisImpl<ContextT>::addCustomUniformityCandidate(
     const InstructionT *I) {
-  CustomDivergenceCandidates.insert(I);
+  CustomUniformityCandidates.insert(I);
 }
 
 // Mark as divergent all external uses of values defined in \p DefCycle.

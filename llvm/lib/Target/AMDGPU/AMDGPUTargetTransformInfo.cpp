@@ -1732,8 +1732,7 @@ InstructionUniformity
 GCNTTIImpl::getInstructionUniformity(const Value *V) const {
   if (const IntrinsicInst *Intrinsic = dyn_cast<IntrinsicInst>(V)) {
     switch (Intrinsic->getIntrinsicID()) {
-    case Intrinsic::amdgcn_permlane16:
-    case Intrinsic::amdgcn_permlanex16:
+    case Intrinsic::amdgcn_wave_shuffle:
       return InstructionUniformity::Custom;
     default:
       break;
@@ -1749,7 +1748,6 @@ GCNTTIImpl::getInstructionUniformity(const Value *V) const {
   return InstructionUniformity::Default;
 }
 
-<<<<<<< HEAD
 InstructionCost GCNTTIImpl::getScalingFactorCost(Type *Ty, GlobalValue *BaseGV,
                                                  StackOffset BaseOffset,
                                                  bool HasBaseReg, int64_t Scale,
@@ -1799,23 +1797,12 @@ bool GCNTTIImpl::shouldDropLSRSolutionIfLessProfitable() const {
 
 bool GCNTTIImpl::isDivergent(const Instruction *I,
                              const SmallBitVector &DivergentArgs) const {
-  if (const IntrinsicInst *Intrinsic = dyn_cast<IntrinsicInst>(I)) {
-    switch (Intrinsic->getIntrinsicID()) {
-    case Intrinsic::amdgcn_permlane16:
-    case Intrinsic::amdgcn_permlanex16:
-      // For permlane16/permlanex16:
-      // Operand 0: old value (ignored for divergence)
-      // Operand 1: src0 (source value to permute)
-      // Operand 2: src1 (lane select within 16-lane group)
-      // Operand 3: src2 (which 16-lane group)
-      // Result is divergent if both src0 (op 1) and src1 (op 2) are divergent
-      if (DivergentArgs.size() > 2) {
-        return DivergentArgs[1] && DivergentArgs[2];
-      }
-      return false;
-    default:
-      break;
-    }
+  const IntrinsicInst *Intrinsic = cast<IntrinsicInst>(I);
+  switch (Intrinsic->getIntrinsicID()) {
+  case Intrinsic::amdgcn_wave_shuffle:
+    // wave_shuffle(Value, Index): result is divergent iff Index is divergent.
+    return DivergentArgs[1];
+  default:
+    llvm_unreachable("unexpected intrinsic in isDivergent");
   }
-  return false;
 }
