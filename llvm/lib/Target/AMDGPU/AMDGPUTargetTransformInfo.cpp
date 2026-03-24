@@ -1795,16 +1795,15 @@ bool GCNTTIImpl::shouldDropLSRSolutionIfLessProfitable() const {
   return true;
 }
 
-bool GCNTTIImpl::isDivergent(const Instruction *I,
-                             const SmallBitVector &DivergentArgs) const {
+bool GCNTTIImpl::isUniform(const Instruction *I,
+                           const SmallBitVector &UniformArgs) const {
   const IntrinsicInst *Intrinsic = cast<IntrinsicInst>(I);
   switch (Intrinsic->getIntrinsicID()) {
   case Intrinsic::amdgcn_wave_shuffle:
-    // wave_shuffle(Value, Index): result is divergent only when both Value and
-    // Index are divergent. A uniform Value read from any lane yields the same
-    // result, and a uniform Index makes all lanes read the same source lane.
-    return DivergentArgs[0] && DivergentArgs[1];
+    // wave_shuffle(Value, Index): result is uniform when either Value or Index
+    // is uniform.
+    return UniformArgs[0] || UniformArgs[1];
   default:
-    llvm_unreachable("unexpected intrinsic in isDivergent");
+    llvm_unreachable("unexpected intrinsic in isUniform");
   }
 }

@@ -51,7 +51,6 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SparseBitVector.h"
 #include "llvm/ADT/StringExtras.h"
-#include "llvm/ADT/Uniformity.h"
 #include "llvm/Support/raw_ostream.h"
 
 #define DEBUG_TYPE "uniformity"
@@ -798,7 +797,7 @@ void GenericUniformityAnalysisImpl<ContextT>::markDivergent(
   // For custom uniformity candidates, check if the instruction can be
   // proven uniform based on which operands are uniform/divergent.
   // The candidate will be re-evaluated as operands become divergent.
-  if (CustomUniformityCandidates.count(&I)) {
+  if (CustomUniformityCandidates.contains(&I)) {
     if (isCustomUniform(I))
       return;
   }

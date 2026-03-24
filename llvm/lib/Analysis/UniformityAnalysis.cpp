@@ -9,7 +9,6 @@
 #include "llvm/Analysis/UniformityAnalysis.h"
 #include "llvm/ADT/GenericUniformityImpl.h"
 #include "llvm/ADT/SmallBitVector.h"
-#include "llvm/ADT/Uniformity.h"
 #include "llvm/Analysis/CycleAnalysis.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Dominators.h"
@@ -116,11 +115,10 @@ bool llvm::GenericUniformityAnalysisImpl<SSAContext>::isDivergentUse(
 template <>
 bool GenericUniformityAnalysisImpl<SSAContext>::isCustomUniform(
     const Instruction &I) const {
-  SmallBitVector DivergentArgs(I.getNumOperands());
-  for (unsigned OpIdx = 0, E = DivergentArgs.size(); OpIdx != E; ++OpIdx) {
-    DivergentArgs[OpIdx] = isDivergentUse(I.getOperandUse(OpIdx));
-  }
-  return !TTI->isDivergent(&I, DivergentArgs);
+  SmallBitVector UniformArgs(I.getNumOperands());
+  for (auto [Idx, Use] : enumerate(I.operands()))
+    UniformArgs[Idx] = !isDivergentUse(Use);
+  return TTI->isUniform(&I, UniformArgs);
 }
 
 // This ensures explicit instantiation of

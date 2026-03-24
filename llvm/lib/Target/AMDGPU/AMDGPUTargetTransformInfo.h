@@ -322,8 +322,8 @@ public:
   bool isNumRegsMajorCostOfLSR() const override;
   bool shouldDropLSRSolutionIfLessProfitable() const override;
 
-  bool isDivergent(const Instruction *I,
-                   const SmallBitVector &DivergentArgs) const override;
+  bool isUniform(const Instruction *I,
+                 const SmallBitVector &UniformArgs) const override;
 };
 
 } // end namespace llvm
