@@ -1800,8 +1800,10 @@ bool GCNTTIImpl::isDivergent(const Instruction *I,
   const IntrinsicInst *Intrinsic = cast<IntrinsicInst>(I);
   switch (Intrinsic->getIntrinsicID()) {
   case Intrinsic::amdgcn_wave_shuffle:
-    // wave_shuffle(Value, Index): result is divergent iff Index is divergent.
-    return DivergentArgs[1];
+    // wave_shuffle(Value, Index): result is divergent only when both Value and
+    // Index are divergent. A uniform Value read from any lane yields the same
+    // result, and a uniform Index makes all lanes read the same source lane.
+    return DivergentArgs[0] && DivergentArgs[1];
   default:
     llvm_unreachable("unexpected intrinsic in isDivergent");
   }

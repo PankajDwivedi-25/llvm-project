@@ -1,9 +1,10 @@
 ; RUN: opt -mtriple amdgcn-- -passes='print<uniformity>' -disable-output %s 2>&1 | FileCheck %s
 
-; wave_shuffle(Value, Index): result is uniform when Index is uniform,
-; regardless of Value's divergence.
+; wave_shuffle(Value, Index): result is divergent only when both Value and
+; Index are divergent. A uniform Value read from any lane yields the same
+; result, and a uniform Index makes all lanes read the same source lane.
 
-; All kernel args are uniform, so Index is uniform => result is uniform.
+; All kernel args are uniform => result is uniform.
 ; CHECK-LABEL: UniformityInfo for function 'wave_shuffle_all_uniform':
 ; CHECK: ALL VALUES UNIFORM
 define amdgpu_kernel void @wave_shuffle_all_uniform(ptr addrspace(1) %out, i32 %val, i32 %idx) {
@@ -12,7 +13,8 @@ define amdgpu_kernel void @wave_shuffle_all_uniform(ptr addrspace(1) %out, i32 %
   ret void
 }
 
-; Value is divergent (thread ID), but Index is uniform => result is uniform.
+; Value is divergent, Index is uniform => result is uniform.
+; All lanes read from the same source lane, so the result is the same.
 ; CHECK-LABEL: UniformityInfo for function 'wave_shuffle_divergent_val_uniform_idx':
 ; CHECK-NOT: DIVERGENT: {{.*}}wave.shuffle
 define amdgpu_kernel void @wave_shuffle_divergent_val_uniform_idx(ptr addrspace(1) %out, i32 %idx) {
@@ -22,9 +24,11 @@ define amdgpu_kernel void @wave_shuffle_divergent_val_uniform_idx(ptr addrspace(
   ret void
 }
 
-; Value is uniform, but Index is divergent (thread ID) => result is divergent.
+; Value is uniform, Index is divergent => result is uniform.
+; Each lane may read from a different source lane, but Value is the same
+; across all lanes so the result is still uniform.
 ; CHECK-LABEL: UniformityInfo for function 'wave_shuffle_uniform_val_divergent_idx':
-; CHECK: DIVERGENT: %v = call i32 @llvm.amdgcn.wave.shuffle.i32(i32 %val, i32 %tid)
+; CHECK-NOT: DIVERGENT: {{.*}}wave.shuffle
 define amdgpu_kernel void @wave_shuffle_uniform_val_divergent_idx(ptr addrspace(1) %out, i32 %val) {
   %tid = call i32 @llvm.amdgcn.workitem.id.x()
   %v = call i32 @llvm.amdgcn.wave.shuffle(i32 %val, i32 %tid)
